@@ -88,25 +88,6 @@ exports.lancamento = (req, res) => {
 	})
 }
 
-exports.lancamentoSituacao = (req, res) => {
-	objetoDeRetorno.ok = false 
-	objetoDeRetorno.menssagem = ''
-	objetoDeRetorno.resultado = {}
-
-	LancamentoSituacao.find({}, (err, elementos) => {
-		if(err){
-			objetoDeRetorno.menssagem = 'Erro ao buscar lançamento situacao' 
-			return res.json(objetoDeRetorno)
-		}
-
-		objetoDeRetorno.ok = true
-		objetoDeRetorno.resultado = {
-			elementos,
-		}
-		return res.json(objetoDeRetorno)
-	})
-}
-
 exports.lancarUm = (req, res) => {
 	objetoDeRetorno.ok = false 
 	objetoDeRetorno.menssagem = ''
@@ -126,10 +107,10 @@ exports.lancarUm = (req, res) => {
 		data_inativacao: null,
 		hora_inativacao: null,
 		categoria_id: req.body.categoria_id,
-		valor: req.body.valor,
-		taxa: req.body.taxa,
+		recebido: req.body.recebido,
 		descricao: req.body.descricao,
-		usuario_id: req.body.usuario_id,
+		usuario_id: req.body.quem_recebeu_id,
+		quem_recebeu_id: req.body.quem_recebeu_id,
 		empresa_id: req.body.empresa_id,
 		data,
 	}
@@ -141,33 +122,8 @@ exports.lancarUm = (req, res) => {
 			objetoDeRetorno.menssagem = 'Erro ao salvar lançamento' 
 			return res.json(objetoDeRetorno)
 		}
-
-		const elementoAssociativo = {
-			data_criacao: pegarDataEHoraAtual()[0],
-			hora_criacao: pegarDataEHoraAtual()[1],
-			data_inativacao: null,
-			hora_inativacao: null,
-			situacao_id: SITUACAO_NAO_RECEBIDO,
-			lancamento_id: lancamento._id,
-			usuario_id: req.body.usuario_id,
-		}
-		const novoLancamentoSituacao = new LancamentoSituacao(elementoAssociativo)
-
-		novoLancamentoSituacao.save((err, lancamentoSituacao) => {
-			if(err){
-				objetoDeRetorno.menssagem = 'Erro ao salvar lançamento situacao' 
-				return res.json(objetoDeRetorno)
-			}
-
-			objetoDeRetorno.ok = true
-			objetoDeRetorno.resultado = {
-				lancamento,
-				lancamentoSituacao
-			}
-
-			return res.json(objetoDeRetorno)
-		})
-
+		objetoDeRetorno.ok = true
+		return res.json(objetoDeRetorno)
 	})
 }
 
@@ -176,7 +132,6 @@ exports.lancarVarios = (req, res) => {
 	objetoDeRetorno.menssagem = ''
 	objetoDeRetorno.resultado = {}
 
-	objetoDeRetorno.resultado.elementos = []
 	req.body.forEach((item, indice, array) => {
 		const diaData = item.dia.toString().padStart(2, '0')
 		const mesData = item.mes.toString().padStart(2, '0')
@@ -187,8 +142,8 @@ exports.lancarVarios = (req, res) => {
 			data_inativacao: null,
 			hora_inativacao: null,
 			categoria_id: item.categoria_id,
-			valor: item.valor,
-			taxa: item.taxa,
+			dizimo: item.dizimo,
+			oferta: item.oferta,
 			descricao: item.descricao,
 			usuario_id: item.usuario_id,
 			empresa_id: item.empresa_id,
@@ -203,35 +158,10 @@ exports.lancarVarios = (req, res) => {
 				return res.json(objetoDeRetorno)
 			}
 
-			const elementoAssociativo = {
-				data_criacao: pegarDataEHoraAtual()[0],
-				hora_criacao: pegarDataEHoraAtual()[1],
-				data_inativacao: null,
-				hora_inativacao: null,
-				situacao_id: SITUACAO_NAO_RECEBIDO,
-				lancamento_id: lancamento._id,
-				usuario_id: lancamento.usuario_id,
-			}
-			const novoLancamentoSituacao = new LancamentoSituacao(elementoAssociativo)
-
-			novoLancamentoSituacao.save((err, lancamentoSituacao) => {
-				if(err){
-					objetoDeRetorno.menssagem = 'Erro ao salvar lançamento situacao' 
-					return res.json(objetoDeRetorno)
-				}
-
-				objetoDeRetorno.ok = true
-				//objetoDeRetorno.resultado.elementos.push({
-				//	lancamento,
-				//	lancamentoSituacao
-				//})
-
-				if(indice === array.length-1){ 
-					return res.json(objetoDeRetorno)
-				}
-			})
 		})
 	})
+	objetoDeRetorno.ok = true
+	return res.json(objetoDeRetorno)
 }
 
 exports.alterarLancamento = (req, res) => {
@@ -245,53 +175,20 @@ exports.alterarLancamento = (req, res) => {
 	}
 
 	Lancamento.findOne({_id: req.body.lancamento_id}, (err, lancamento) => {
-		const mensagemExtra = ` <p>Valor Anterior: ${lancamento.valor}, Taxa Anterior: ${lancamento.taxa}</p> <p>Valor Novo: ${req.body.valor}, Taxa Nova: ${req.body.taxa}</p> ` 
-		lancamento.valor = req.body.valor
-		lancamento.taxa = req.body.taxa
+		lancamento.recebido = req.body.recebido
+		lancamento.quem_recebeu_id = req.body.quem_recebeu_id
 		lancamento.save((err, lancamento) => {
 			if(err){
 				objetoDeRetorno.menssagem = 'Erro ao salvar lançamento' 
 				return res.json(objetoDeRetorno)
 			}
 
-			LancamentoSituacao.findOne({_id: req.body.lancamento_situacao_id}, (err, lancamentoSituacao) => {
-				lancamentoSituacao.data_inativacao = pegarDataEHoraAtual()[0]		
-				lancamentoSituacao.hora_inativacao = pegarDataEHoraAtual()[1]		
-				lancamentoSituacao.save((err) => {
-					if(err){
-						objetoDeRetorno.menssagem = 'Erro ao alterar lançamento situacao' 
-						return res.json(objetoDeRetorno)
-					}
+			objetoDeRetorno.ok = true
+			objetoDeRetorno.resultado = {
+				lancamento,
+			}
+			return res.json(objetoDeRetorno)
 
-					const elementoAssociativo = {
-						data_criacao: pegarDataEHoraAtual()[0],
-						hora_criacao: pegarDataEHoraAtual()[1],
-						data_inativacao: null,
-						hora_inativacao: null,
-						situacao_id: req.body.situacao_id,
-						lancamento_id: req.body.lancamento_id,
-						usuario_id: req.body.usuario_id,
-						extra: mensagemExtra,
-					}
-					const novoLancamentoSituacao = new LancamentoSituacao(elementoAssociativo)
-
-					novoLancamentoSituacao.save((err, lancamentoSituacaoNovo) => {
-						if(err){
-							objetoDeRetorno.menssagem = 'Erro ao salvar lançamento situacao' 
-							return res.json(objetoDeRetorno)
-						}
-
-						objetoDeRetorno.ok = true
-						objetoDeRetorno.resultado = {
-							lancamento,
-							lancamentoSituacao,
-							lancamentoSituacaoNovo,
-						}
-
-						return res.json(objetoDeRetorno)
-					})
-				})
-			})
 		})
 	})
 }
@@ -421,24 +318,8 @@ exports.removerLancamento = (req, res) => {
 				return res.json(objetoDeRetorno)
 			}
 
-			LancamentoSituacao.findOne({_id: req.body.lancamento_situacao_id}, (err, lancamentoSituacao) => {
-				lancamentoSituacao.data_inativacao = pegarDataEHoraAtual()[0]		
-				lancamentoSituacao.hora_inativacao = pegarDataEHoraAtual()[1]		
-				lancamentoSituacao.save((err) => {
-					if(err){
-						objetoDeRetorno.menssagem = 'Erro ao alterar lançamento situacao' 
-						return res.json(objetoDeRetorno)
-					}
-
-					objetoDeRetorno.ok = true
-					objetoDeRetorno.resultado = {
-						lancamento,
-						lancamentoSituacao,
-					}
-
-					return res.json(objetoDeRetorno)
-				})
-			})
+			objetoDeRetorno.ok = true
+			return res.json(objetoDeRetorno)
 		})
 	})
 }
@@ -457,8 +338,6 @@ exports.gerarLancamentos = (req, res) => {
 				data_inativacao: null,
 				hora_inativacao: null,
 				categoria_id: contaFixa.categoria_id,
-				valor: 0,
-				taxa: 0,
 				descricao: 'Conta Fixa',
 				usuario_id: USUARIO_SISTEMA,
 				empresa_id: contaFixa.empresa_id,
@@ -471,24 +350,6 @@ exports.gerarLancamentos = (req, res) => {
 					objetoDeRetorno.menssagem = 'Erro ao salvar lançamento' 
 					return res.json(objetoDeRetorno)
 				}
-
-				const elementoAssociativo = {
-					data_criacao: pegarDataEHoraAtual()[0],
-					hora_criacao: pegarDataEHoraAtual()[1],
-					data_inativacao: null,
-					hora_inativacao: null,
-					situacao_id: SITUACAO_NAO_RECEBIDO,
-					lancamento_id: lancamento._id,
-					usuario_id: USUARIO_SISTEMA,
-				}
-				const novoLancamentoSituacao = new LancamentoSituacao(elementoAssociativo)
-
-				novoLancamentoSituacao.save((err, lancamentoSituacao) => {
-					if(err){
-						objetoDeRetorno.menssagem = 'Erro ao salvar lançamento situacao' 
-						return res.json(objetoDeRetorno)
-					}
-				})
 			})
 		})
 		objetoDeRetorno.ok = true
