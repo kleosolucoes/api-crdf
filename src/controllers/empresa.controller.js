@@ -176,6 +176,8 @@ exports.alterarLancamento = (req, res) => {
 
 	Lancamento.findOne({_id: req.body.lancamento_id}, (err, lancamento) => {
 		lancamento.recebido = req.body.recebido
+		lancamento.dizimo = req.body.dizimo
+		lancamento.oferta = req.body.oferta
 		lancamento.quem_recebeu_id = req.body.quem_recebeu_id
 		lancamento.save((err, lancamento) => {
 			if(err){
