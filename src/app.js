@@ -17,7 +17,6 @@ dotenv.config()
 
 const app = express()
 let mongoDB = process.env.MONGODB_URI
-mongoDB = 'mongodb://crdf:GBz2PcOmbo!B7w]S@ds021999.mlab.com:21999/crdf'
 mongoose.connect(mongoDB, { useNewUrlParser: true})
 mongoose.Promise = global.Promise
 let db = mongoose.connection
