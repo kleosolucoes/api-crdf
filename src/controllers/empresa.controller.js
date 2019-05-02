@@ -123,6 +123,7 @@ exports.lancarUm = (req, res) => {
 			return res.json(objetoDeRetorno)
 		}
 		objetoDeRetorno.ok = true
+		objetoDeRetorno.resultado.lancamento = lancamento
 		return res.json(objetoDeRetorno)
 	})
 }
