@@ -344,6 +344,9 @@ exports.gerarLancamentos = (req, res) => {
 				descricao: 'Conta Fixa',
 				usuario_id: USUARIO_SISTEMA,
 				empresa_id: contaFixa.empresa_id,
+				dizimo: null,
+				oferta: null,
+				recebido: null,
 				data: pegarDataEHoraAtual()[0],
 			}
 			const novoLancamento = new Lancamento(elemento)
